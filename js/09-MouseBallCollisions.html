@@ -1,0 +1,191 @@
+<!DOCTYPE HTML>
+<html>
+   <body>
+      <canvas id = "mycanvas" width = "800" height = "800"></canvas>
+
+      <script>
+        class Ball
+        {
+            constructor(x,y,r)
+            {
+                this.x=x;
+                this.y=y;
+                this.r=r;
+                this.vx=-0.2 + 0.4*Math.random();
+                this.vy=-0.2 + 0.4*Math.random();
+            }
+            
+            update(dt)
+            {
+                this.x += this.vx * dt;
+                this.y += this.vy * dt;
+                
+                if ( this.x + this.r > canvas.width )
+                {
+                    this.x = canvas.width - this.r - 1;
+                    this.vx = -Math.abs(this.vx);
+                }
+
+                if ( this.x-this.r < 0 )
+                {
+                    this.x = this.r + 1;
+                    this.vx = Math.abs(this.vx);
+                }
+                
+                if ( this.y + this.r > canvas.height )
+                {
+                    this.y = canvas.height - this.r - 1;
+                    this.vy = -Math.abs(this.vy);
+                }
+
+                if ( this.y-this.r < 0 )
+                {
+                    this.y = this.r + 1;
+                    this.vy = Math.abs(this.vy);
+                }
+            }
+        }
+      
+      
+        const canvas = document.getElementById('mycanvas');
+        const ctx = canvas.getContext('2d');
+        
+        ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+        ctx.fillRect(0,0,canvas.width, canvas.height);
+
+        var bx=canvas.width/2;
+        var by=canvas.height/2;
+        var br=50;
+        
+        var vbx=.2;
+        var vby=0;
+        
+        var abx=0;
+        var aby=.001;    
+        
+        canvas.addEventListener('mousemove', (e) =>
+        {
+            bx = e.offsetX;
+            by = e.offsetY;
+        });
+        
+        function clearBackground()
+        {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+        }
+        
+        function drawBall(cx,cy,r,color)
+        {
+            ctx.save();
+            ctx.beginPath();
+            ctx.fillStyle = color;
+            ctx.arc(cx,cy,r,0,2 * Math.PI, false);
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(79, 70, 44, 1.0)';
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.fillStyle = 'rgba(230, 222, 200, 1.0)';
+            ctx.arc(cx+r/2,cy-r/2,r/8,0,2 * Math.PI, false);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawLines()
+        {
+            for ( i = 0; i < enemies.length; ++i )
+            {
+                for ( j = 0; j < enemies.length; ++j )
+                {
+                    const e1 = enemies[i];
+                    const e2 = enemies[j];
+
+                    if ( e1 !== e2 )
+                    {
+                        const dx = e1.x - e2.x;
+                        const dy = e1.y - e2.y;
+                        const m = Math.sqrt( dx*dx + dy*dy );
+
+                        const collisionLine = m - (e1.r + e2.r);
+                        const ux = dx / m;
+                        const uy = dy / m;
+
+                        if (collisionLine <= 0.0 )
+                        {
+                            e1.x = e2.x + ux * (e1.r + e2.r);
+                            e1.y = e2.y + uy * (e1.r + e2.r);
+
+                            const dotN = e1.vx * ux + e1.vy * uy;
+                            e1.vx += -2 * dotN * ux;
+                            e1.vy += -2 * dotN * uy;
+
+                            const dotN2 = e2.vx * -ux + e2.vy * -uy;
+                            e2.vx += -2 * dotN2 * -ux;
+                            e2.vy += -2 * dotN2 * -uy;
+                        }
+                        else if ( collisionLine>0.0 && collisionLine < 200.0 )
+                        {
+                            ctx.beginPath();
+                            ctx.lineCap = "round";
+
+                            ctx.lineWidth = 20 * (1.0-collisionLine/200.0);
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${1.0-collisionLine/200.0})`;
+
+                            ctx.moveTo(e1.x - ux * e1.r, e1.y - uy * e1.r);
+                            ctx.lineTo(e2.x + ux * e2.r, e2.y + uy * e2.r);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+        }
+        
+        var dt=0;
+        var lastTNow = window.performance.now();
+        
+        const enemies = [];
+        
+        for (i=0; i < 16; ++i )
+        {
+            enemies.push(new Ball( 800 * Math.random(), 800 * Math.random(), 20 + 40 * Math.random() ));
+        }
+
+        function draw() 
+        {
+            clearBackground();
+            
+            const tNow = window.performance.now();
+            dt = (tNow - lastTNow);
+            lastTNow = tNow;
+
+            // Update everything...            
+            
+            for ( i = 0; i < enemies.length; ++i )
+            {
+                enemies[i].update(dt);
+            }
+
+            // Draw everything...
+
+            drawBall(bx,by,br,'rgba(58, 224, 216, 1.0)');
+            
+            drawLines();
+
+            for ( i = 0; i < enemies.length - 1; ++i )
+            {
+                drawBall(enemies[i].x,enemies[i].y,enemies[i].r,'rgba(255,0,0,1.0)');
+            }
+
+            const greenBall = enemies[enemies.length - 1];
+            drawBall(greenBall.x,greenBall.y,greenBall.r,'rgba(0,255,0,1.0)');
+
+
+            window.requestAnimationFrame(draw);
+        }
+        
+        draw();
+      </script>
+   </body>
+</html>
