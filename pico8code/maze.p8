@@ -103,7 +103,9 @@ function _update60()
 	--success
 	if (player.x==112 and player.y==8) then
 		points+=1
-		print(points)
+		if (points>=lvls) then
+		maze.y=128
+		end
 	end
 	--player handicaps
 	if (player.h==1) then
@@ -124,6 +126,7 @@ if (player.x==112 and player.y==8) then
 	spr(19,112,8)
 	tim=0
 end
+print("points: "..points)
 -- print time in screen
 --[[
 print("tiempo:"..time(),-2,-2,7)
